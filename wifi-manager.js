@@ -16,7 +16,7 @@ exports.L=()=>{
     }
   },
   turn:(s)=>{
-    L.reset()
+    L.reset();
     L.write(!s);
   },
   blink:(times,t=500)=>{
@@ -28,9 +28,9 @@ exports.L=()=>{
       L.ledOn=!L.ledOn;
       L.times=L.times+1;
       if(L.times==times*2){
-        L.reset()
+        L.reset();
       }
-    },t)
+    },t);
   }
 };
 };
