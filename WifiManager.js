@@ -1,7 +1,7 @@
 const wifi = require('Wifi');
 const f = new (require("FlashEEPROM"))();
 //Library for instant feedback using a led
-L={
+exports.L={
   
   init: function(pin){
     L.pin=pin;
@@ -35,7 +35,7 @@ L={
   }
 };
 
-C={
+exports.C={
   handleRequest: function(req,res){
     if (req.method=="POST") {
       req.on("close", function(){
@@ -156,5 +156,3 @@ C={
     setWatch(C.start_setup, C.pin, { repeat: true, edge: 'falling', debounce: 50 });
   }
 };
-//--- init object ---
-var WiFiManager = C;
