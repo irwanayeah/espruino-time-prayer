@@ -1,29 +1,30 @@
 const wifi = require('Wifi');
 const f = new (require("FlashEEPROM"))();
 //Library for instant feedback using a led
-exports.L=()=>{
-  return{
-  init: (pin)=>{
+L={
+  
+  init: function(pin){
     L.pin=pin;
   },
-  write:(w)=>{
+  write:function(w){
     digitalWrite(L.pin,w);
   },
-  reset:()=>{
+  reset:function(){
     if(L.i){
       clearInterval(L.i);
       L.i=undefined;
     }
   },
-  turn:(s)=>{
+  turn:function(s){
     L.reset();
     L.write(!s);
   },
-  blink:(times,t=500)=>{
+  blink:function(times,t){
+    t=t===undefined?500:t;
     L.reset();
     L.ledOn=false;
     L.times=0;
-    L.i=setInterval(()=>{
+    L.i=setInterval(function(){
       L.write(L.ledOn);
       L.ledOn=!L.ledOn;
       L.times=L.times+1;
@@ -33,15 +34,15 @@ exports.L=()=>{
     },t);
   }
 };
-};
-exports.C={
-  handleRequest: (req,res)=>{
+
+C={
+  handleRequest: function(req,res){
     if (req.method=="POST") {
       req.on("close", function(){
         obj=C.parse(req.read());
         if(obj.s){
-          setTimeout(() => {
-            wifi.stopAP();
+          setTimeout(function()  {
+            //wifi.stopAP(); test
             C.start_wifi(obj.s, obj.p);
             L.turn(false);
           }, 3000);
@@ -50,8 +51,8 @@ exports.C={
       res.writeHead(200);
       res.end(`<html><h2>You can now close this page and restore your Wi-Fi connection.</h2></html>`);
     }else{
-      wifi.scan(ns => {
-        let out=`<html><style>body *{font-size:24px;padding:8px;display:block;}</style><meta name="viewport" content="width=device-width, initial-scale=1"><form method="POST" action="/"><label for="s">Choose Wifi</label><br/><select name="s" id="s">`;
+      wifi.scan(function(ns)  {
+        var out=`<html><style>body *{font-size:24px;padding:8px;display:block;}</style><meta name="viewport" content="width=device-width, initial-scale=1"><form method="POST" action="/"><label for="s">Choose Wifi</label><br/><select name="s" id="s">`;
         out=out+ns.map(n => '<option value="'+n.ssid+'">'+n.ssid+'</option>');
         out=out+`</select><label>Password</label><input id="p" name="p" type="text"/><input type="submit" value="save"></form>`;
         out=out+"</html>";
@@ -60,26 +61,26 @@ exports.C={
       });
     }
   },
-  parse:(s)=>{
-    return s.split("&").reduce((prev, c)=> {
-      let p = c.split("=");
+  parse:function(s){
+    return s.split("&").reduce(function(prev, c) {
+      var p = c.split("=");
       prev[decodeURIComponent(p[0])] = decodeURIComponent(p[1]);
       return prev;
     }, {});
   },
-  start_setup:()=>{
+  start_setup:function(){
     C.reboot=false;
     print(process.memory());
-    wifi.setHostname("espruino-wifi");
-    wifi.startAP("espruino-wifi", {}, err => {
+    wifi.setHostname("esp-wifi");
+    wifi.startAP("esp-wifi", {}, function(err)  {
       require("http").createServer(C.handleRequest).listen(80);
       L.turn(true);
       print(process.memory());
     });
   },
-  check_wifi:()=>{
-    var ct=setInterval(()=>{
-      wifi.getDetails(obj =>{
+  check_wifi:function(){
+    var ct=setInterval(function(){
+      wifi.getDetails(function(obj) {
         console.log(obj.status);
         print(process.memory());
         if(obj.status=="no_ap_found" || obj.status=="wrong_password" || obj.status=="off" || obj.status=="connect_failed"){
@@ -93,20 +94,20 @@ exports.C={
     },1000);
   },
 
-  error:()=>{
+  error:function(){
     console.log("ERROR");
     if(C.pin){
       C.reboot=true;
       print(process.memory());
       L.blink(2, 700);
-      setTimeout(()=>{
+      setTimeout(function(){
         if(C.reboot){load();}
       }, 10000);
     }else{
       C.start_setup();
     }
   },
-  start_wifi:(ssid, passw, callback)=>{
+  start_wifi:function(ssid, passw, callback){
     C.check_wifi();
     L.turn(true);
     if(ssid){
@@ -132,25 +133,28 @@ exports.C={
       });
     }
   },
-  read:(pos)=>{
-    let p=f.read(pos);
+  read:function(pos){
+    var p=f.read(pos);
     return (p!==undefined ? E.toString(p) : undefined);
   },
-  init:(led, cb)=>{
+  init:function(led, callback){
     L.init(led);
     C.check_wifi();
-    let ssid=C.read(0);
-    let pass=C.read(1);
+    var ssid=C.read(0);
+    var pass=C.read(1);
     console.log("saved ssid:", ssid);
     console.log("saved pass:", pass);
-    start_wifi(ssid, pass, function(){
+    C.start_wifi(ssid, pass, function(){
       callback();
     });
     wifi.on("disconnected", C.error);
+    C.start_setup(); //test
   },
-  setupPin:(pin)=>{
+  setupPin:function(pin){
     C.pin=pin;
     pinMode(pin, 'input_pullup');
     setWatch(C.start_setup, C.pin, { repeat: true, edge: 'falling', debounce: 50 });
   }
 };
+//--- init object ---
+var WiFiManager = C;
