@@ -569,3 +569,5 @@ var DMath = {
 		return (a < 0) ? a+ b : a;
 	}
 };
+//------------- init object ------------
+var prayTimes = new PrayTimes();
