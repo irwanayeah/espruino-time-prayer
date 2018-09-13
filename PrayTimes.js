@@ -35,7 +35,7 @@ http://praytimes.org/calculation
 //------------------------ User Interface -------------------------
 
 
-	getTimes (date, coordinates [, timeZone [, dst [, timeFormat]]])
+	//getTimes (date, coordinates [, timeZone [, dst [, timeFormat]]])
 
 	setMethod (method)       // set calculation method
 	adjust (parameters)      // adjust calculation parameters
